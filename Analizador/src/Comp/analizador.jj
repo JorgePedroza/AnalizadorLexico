@@ -155,34 +155,24 @@ void Input() :
             f.txtCodigo.append("Params body is incomplete, missing param? or replace it by a )" + System.lineSeparator());
             f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
 
-        }else if(e.currentToken.next.image.equals("switch") &&  level ==1){
-            f.txtCodigo.append("Error, not found '(' " + System.lineSeparator());
+        }else if(e.currentToken.next.image.equals("switch") &&  level != 29){
+          f.txtCodigo.append("Error, incomplete or invalid parameters. \nSomething like\"switch(num1)\" expected " + System.lineSeparator());
           f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
        
-        }  else if( level == 29 && e.currentToken.next.image != "case"  || e.currentToken.next.image != "break" || e.currentToken.next.image.equals(")") || e.currentToken.next.image.equals(":") ){
+        }  else if( (e.currentToken.next.image.equals("case")  || e.currentToken.next.image.equals("break") || e.currentToken.next.image.equals(")") || e.currentToken.next.image.equals(":") ) && level == 29  ){
          
-            if(e.currentToken.next.image.equals("switch")){
-                  f.txtCodigo.append("Error, not found '(' " + System.lineSeparator());
-                  f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
-        }  else  if(e.currentToken.next.image == "" || level == 3){
-             f.txtCodigo.append(e.getMessage() + System.lineSeparator());
-           }
-   }else if(level == 29 || level ==3){
-                f.txtCodigo.append(e.getMessage() + System.lineSeparator());
-       
-        }else{
-                  f.txtCodigo.append(e.getMessage() + System.lineSeparator());
-           }
-
-
-        System.out.println(e.getMessage());
-        }else if((e.currentToken.next.image.equals("=") || e.currentToken.next.image.equals("==")) && level == 1){
+   }else if((e.currentToken.next.image.equals("=") || e.currentToken.next.image.equals("==")) && level == 1){
             f.txtCodigo.append("Missing statement" + System.lineSeparator());
             f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
         }else if((e.currentToken.next.image.equals("if") || e.currentToken.next.image.equals("elif")) && level == 1){
             f.txtCodigo.append("Missing comparation, expected <NUMBER>, <IDENTIFIER>, \"text\"" + System.lineSeparator());
             f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
-        }
+        } else{
+            f.txtCodigo.append(e.getMessage() + System.lineSeparator());
+     }
+
+        System.out.println(level);
+        System.out.println(e.getMessage());
         System.out.println("Error: " + e.currentToken.next.image + ", kind: " + e.currentToken.next.kind);
     }
 }
@@ -212,7 +202,7 @@ void Variables() :
         <NUMBER>|
         <IDENTIFIER>|
         <TEXT>
-    )(<EOL>|<EOLW>) 
+    )[(<EOL>|<EOLW>)+] 
 }
 void variableArray() :
 {Token t;System.out.println("Arreglo");}
@@ -220,7 +210,7 @@ void variableArray() :
     try{
         t = <IDENTIFIER>{f.txtCodigo.append("Array -> " + t.image + System.lineSeparator());}<ASIGNACION><LBRACKET>
         [(<IDENTIFIER>|<NUMBER>|<TEXT>|<TRUE>|<FALSE>)[(<COMMA>(<IDENTIFIER>|<NUMBER>|<TEXT>|<TRUE>|<FALSE>))+]]<RBRACKET>(<EOL>|<EOLW>)|
-        t = <IDENTIFIER>{f.txtCodigo.append("Array -> " + t.image + System.lineSeparator());}<LBRACKET>(<NUMBER>|<IDENTIFIER>)<RBRACKET><ASIGNACION>(<IDENTIFIER>|<NUMBER>|<TEXT>|<TRUE>|<FALSE>)(<EOL>|<EOLW>)
+        t = <IDENTIFIER>{f.txtCodigo.append("Array -> " + t.image + System.lineSeparator());}<LBRACKET>(<NUMBER>|<IDENTIFIER>)<RBRACKET><ASIGNACION>(<IDENTIFIER>|<NUMBER>|<TEXT>|<TRUE>|<FALSE>)[(<EOL>|<EOLW>)+]
         /*t = <IDENTIFIER>{f.txtCodigo.append("Array -> " + t.image + System.lineSeparator());}<ASIGNACION><LBRACKET>(<IDENTIFIER>|<NUMBER>|<TEXT>|<TRUE>|<FALSE>)
         (<COMMA>(<IDENTIFIER>|<NUMBER>|<TEXT>|<TRUE>|<FALSE>))+<RBRACKET>(<EOL>|<EOLW>)*/
     }catch(ParseException e){
@@ -231,7 +221,7 @@ void variableArray() :
 void Entrada() :
 {Token t;}
 {
-    <INPUT><LPAREN>[<Quote>((t = <IDENTIFIER>{f.txtCodigo.append("String -> " + t.image + System.lineSeparator());})|<NUMBER>)+<Quote>]<RPAREN>(<EOL>|<EOLW>)
+    <INPUT><LPAREN>[<Quote>((t = <IDENTIFIER>{f.txtCodigo.append("String -> " + t.image + System.lineSeparator());})|<NUMBER>)+<Quote>]<RPAREN>[(<EOL>|<EOLW>)+]
 }
 
 void SentenciaWhile() :
@@ -264,7 +254,7 @@ void SentenciaIf() :
     <IF>Comparacion()(<EOL>|<EOLW>)+
         [Code()]
     [Else()|Elif()]
-    <END>(<EOL>|<EOLW>)
+    <END>[(<EOL>|<EOLW>)+]
 }
 void Comparacion() : 
 
@@ -305,7 +295,7 @@ void Elif() :
     try{
     (
 
-        <ELIF>Comparacion()(<EOL>|<EOLW>)
+        <ELIF>Comparacion()[(<EOL>|<EOLW>)+]
             [Code()]
     )+
     [Else()]
@@ -330,6 +320,8 @@ void SentenciaSwitch() :
     <END>[(<EOL>|<EOLW>)+]
 
 } catch (ParseException e){
+    System.err.println(e.currentToken.image+"---1");
+    System.out.println(e.currentToken.next.image+"----2");
     System.err.println(e.getMessage());
 
     if(e.currentToken.next.image.equals("\r\n") && level == 29){
@@ -338,27 +330,23 @@ void SentenciaSwitch() :
         
     }else if(e.currentToken.next.image == "true" || e.currentToken.next.image == "false"){
 
-        if(e.currentToken.image == "(" ){
-            f.txtCodigo.append("Error, true / false found \nIdentifier expected ");
-            
-             f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
-            }else{
+       
              f.txtCodigo.append("No number or identifier found  ");
             f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
-            }
+            
     
     } else if(e.currentToken.next.image.equals(":") && level == 29){
         if(e.currentToken.image == "case"){
-            f.txtCodigo.append("No number or identifier found  ");
-            f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
-        }else{
-            f.txtCodigo.append("Error, not found ')'  ");
+            f.txtCodigo.append(" Error, Incomplete parameters. ");
             f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
         }
-    }else if(e.currentToken.next.image == "case"){
-        f.txtCodigo.append("No number or identifier found  ");
+    }else if (e.currentToken.next.image.equals("break")){
+        f.txtCodigo.append("Function body can not be empty, delete it or put a Asignation, Print, for, while or switch ");
         f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
-    }else if (e.currentToken.next.image == "default"){
+    } else if(e.currentToken.next.image.equals("case")){
+        f.txtCodigo.append(" Error, Incomplete parameters. ");
+        f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
+    }  else if (e.currentToken.next.image == "default"){
         f.txtCodigo.append("Error, it was found 'default', you forgot \":\"");
         f.txtCodigo.append(" \n Or expected \"end\"  ");
         f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
@@ -372,15 +360,16 @@ void SentenciaSwitch() :
         } else if(e.currentToken.next.image.equals("while")){   
             f.txtCodigo.append("Error, an 'end' was expected ");
             f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
-        } else{
-          f.txtCodigo.append(" Error, a 'case' was expected ");
-          f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());     
+        } else if(e.currentToken.next.image.equals("0") || e.currentToken.next.image.equals("1") || e.currentToken.next.image.equals("2") || e.currentToken.next.image.equals("3") || e.currentToken.next.image.equals("4") || e.currentToken.next.image.equals("5") ||  e.currentToken.next.image.equals("6") || e.currentToken.next.image.equals("7") || e.currentToken.next.image.equals("8") || e.currentToken.next.image.equals("9")){
+             
+            f.txtCodigo.append("Error, \"case\" not found");
+            f.txtCodigo.append("In line " + e.currentToken.beginLine + ", column " + e.currentToken.beginColumn + System.lineSeparator());
+
+        }else{
+            f.txtCodigo.append(e.getMessage());  
         }
         
-    }
-    
-    
-    else if(level == 29 || level == 3){
+    }  else if(level == 29 || level == 3){
         f.txtCodigo.append(e.getMessage() + System.lineSeparator());
     }
  }
@@ -401,7 +390,7 @@ void Return() :
         //return (3+1) * var || var*(3+1)/4+(3+1)
         <RETURN>operacion()(<EOL>|<EOLW>)|
         //return isOdd(number)
-        <RETURN><IDENTIFIER><LPAREN>Args()(<EOL>|<EOLW>)
+        <RETURN><IDENTIFIER><LPAREN>Args()[(<EOL>|<EOLW>)+]
     }catch(ParseException e){
         System.out.println("Error return");
         System.out.println("Error: " + e.currentToken.next.image + ", kind: " + e.currentToken.next.kind);
@@ -439,14 +428,14 @@ void SentenciaFor() :
 	//for i | for numero in [0 1 2 3 4] | in "hola" | in ["mike jorge 29"]
     <FOR>(t = <IDENTIFIER>{f.txtCodigo.append("Iterator -> " + t.image + System.lineSeparator());})<IN>((<Quote>(t = <IDENTIFIER>{f.txtCodigo.append("String -> " + t.image + System.lineSeparator());})+<Quote>)|<LBRACKET>(<NUMBER>|<IDENTIFIER>|<TRUE>|<FALSE>|<TEXT>)[(<COMMA>(<NUMBER>|<IDENTIFIER>|<TRUE>|<FALSE>|<TEXT>))+]<RBRACKET>|<NUMBER>|<IDENTIFIER>)<COLON>(<EOL>|<EOLW>)
         Code()
-    <END>(<EOL>|<EOLW>)
+    <END>[(<EOL>|<EOLW>)+]
 }
 
 void Print() :
 {level = 4;System.out.println("Print");}
 {
     try{
-        <PRINT><LPAREN>Imprimible()[(<CONCATENACION>Imprimible())+]<RPAREN>(<EOL>|<EOLW>)
+        <PRINT><LPAREN>Imprimible()[(<CONCATENACION>Imprimible())+]<RPAREN>[(<EOL>|<EOLW>)+]
     }catch(ParseException e){
         if(e.currentToken.next.image.equals("print") && level == 1){
             f.txtCodigo.append("Encountered: " + e.currentToken.next.image + ", expecting: Text, Number, Boolean, Array value, Identifier" + System.lineSeparator());
